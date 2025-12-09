@@ -18,6 +18,7 @@ import {
   Send,
   Bot,
   User,
+  X,
   Clock,
   CheckCircle,
   AlertTriangle,
@@ -687,6 +688,12 @@ How would you like to proceed today?`,
       if (userMessage.content.toLowerCase().includes('jordan')) {
         setTimeout(() => startJordanBGCActivityStream(), 2000)
       }
+      
+      // Special streaming for Alex Morgan BGC scenario - manual trigger
+      if (userMessage.content.toLowerCase().includes('alex') && userMessage.content.toLowerCase().includes('morgan') && 
+          (userMessage.content.toLowerCase().includes('bgc') || userMessage.content.toLowerCase().includes('background') || userMessage.content.toLowerCase().includes('pull'))) {
+        setTimeout(() => startAlexMorganBGCActivityStream(), 2000)
+      }
     }, 1500)
   }
 
@@ -1177,8 +1184,10 @@ Do you want to approve this exception?`,
 
     const processNextActivity = () => {
       if (currentActivityIndex >= alexBGCUpdates.length) {
-        // Activity trace completed
+        // Alex Morgan BGC activity trace completed
         setCurrentStreamingIndex(-1)
+        // Set flag in localStorage when Alex Morgan BGC is completed
+        localStorage.setItem('alexMorganBGCCompleted', 'true')
         return
       }
 
@@ -1800,6 +1809,15 @@ Do you want to approve this exception?`,
       }
     }
 
+    // Special handling for Alex Morgan BGC scenario - manual trigger
+    if (input.includes('alex') && input.includes('morgan') && (input.includes('bgc') || input.includes('background') || input.includes('pull'))) {
+      // Don't show BGC report immediately, let activity trace complete first
+      return {
+        message: ``,
+        activities: []
+      }
+    }
+
     // Default response
     return {
       message: `I understand your query about ${candidateName}. In ${isAutonomous ? 'Autonomous' : 'Assist'} mode, I can help you start onboarding, check BGC status, review documents, get status updates, or switch between modes. How would you like to proceed?`
@@ -1937,10 +1955,22 @@ Do you want to approve this exception?`,
       
       <DialogContent className="sm:max-w-[80%] lg:max-w-[70%] xl:max-w-[60%] h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <Bot className="w-7 h-7 text-primary" />
-            <span>AI Onboarding Assistant: {candidateName}</span>
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                <Bot className="w-7 h-7 text-primary" />
+                <span>AI Onboarding Assistant: {candidateName}</span>
+              </DialogTitle>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="h-8 w-8 rounded-full hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           <DialogDescription>
             Managing onboarding for {candidateId}. Current stage: <Badge>{currentStage}</Badge>
           </DialogDescription>
